@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Streams</title>
+<meta name="theme-color" content="#dfe6ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141b21" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Streams">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500&display=swap">
+<style>
+/* Calm, natural, wordless: the only text is the tasks. Rain in the afternoon: mist above, warm light low down. */
+:root {
+  --sky: #dfe6ea; --mist: #eef2f1; --ink: #1d2a33; --soft: #5d6e78; --line: #c9d3d8; --card: rgba(255,255,255,.62);
+  --warm: #c9894a; --hush: #8fa2ad; --deep: #2f4e5f;
+  --f-task: "Literata", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --sky: #141b21; --mist: #1b252c; --ink: #e2e9ec; --soft: #9fb0b9; --line: #2c3a43; --card: rgba(36,49,58,.62); --warm: #d9a066; --hush: #5f7380; --deep: #a9c6d6; color-scheme: dark; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: linear-gradient(180deg, var(--sky) 0, var(--mist) 70vh, color-mix(in srgb, var(--warm) 12%, var(--mist)) 100vh, color-mix(in srgb, var(--warm) 12%, var(--mist))) no-repeat, color-mix(in srgb, var(--warm) 12%, var(--mist)); min-height: 100vh;
+  color: var(--ink); font-family: var(--f-task); font-size: 18px; line-height: 1.4;
+  padding: env(safe-area-inset-top) max(16px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px, env(safe-area-inset-left));
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--warm); outline-offset: 2px; border-radius: 10px; }
+svg.i { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.wrap { max-width: 560px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px 6px; }
+header .tools { display: flex; gap: 6px; }
+.ib { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 14px; color: var(--soft); }
+.ib:hover { color: var(--ink); background: var(--card); }
+.ib.on { color: var(--warm); }
+.mark { color: var(--deep); }
+.spin svg { animation: spin 1.2s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Focus */
+.list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.task { display: grid; grid-template-columns: 34px 1fr 44px; align-items: center; gap: 10px; padding: 12px 6px 12px 14px;
+  background: var(--card); border-radius: 18px; backdrop-filter: blur(6px); transition: opacity .5s, transform .5s; }
+.task .g { color: var(--c); opacity: var(--o, 1); }
+.task .t { min-width: 0; overflow-wrap: anywhere; cursor: pointer; }
+.task .t.flow::after { content: ""; display: inline-block; width: 18px; height: 6px; margin-left: 8px; vertical-align: middle;
+  background: radial-gradient(circle, var(--c) 40%, transparent 42%) 0 0/6px 6px repeat-x; opacity: .7; }
+.task.going { opacity: 0; transform: translateY(40px) scale(.96); }
+.tick { width: 44px; height: 44px; display: grid; place-items: center; color: var(--hush); }
+.tick:hover { color: var(--c); }
+.more { grid-column: 2 / 4; display: flex; gap: 6px; padding-top: 4px; }
+.empty { display: grid; place-items: center; padding: 40px 0 0; color: var(--hush); }
+.empty svg { width: 64px; height: 64px; }
+
+.cairn { margin-top: auto; display: flex; justify-content: center; padding: 18px 0 6px; min-height: 40px; }
+.cairn svg { overflow: visible; }
+.stone { transform-origin: center; animation: settle .7s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes settle { from { transform: translateY(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.foot { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 6px 0 18px; }
+.add { display: flex; gap: 8px; align-items: center; width: 100%; }
+.add input { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+.undo { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--card); backdrop-filter: blur(8px); border-radius: 22px; box-shadow: 0 4px 18px rgba(0,0,0,.12); }
+
+/* Planner */
+.stream { margin-top: 18px; }
+.sh { display: flex; align-items: center; gap: 10px; padding: 0 4px 6px; color: var(--soft); font-size: 15px; }
+.sh .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: none; }
+.sh .nm { flex: 1; }
+.sh .ib { width: 36px; height: 36px; }
+.row { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 14px; cursor: pointer; }
+.row:hover { background: var(--card); }
+.row .g { color: var(--c); opacity: var(--o, 1); }
+.row .g svg { width: 22px; height: 22px; }
+.row .t { font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+.row.rest { opacity: .45; }
+.row .ind { display: flex; gap: 2px; color: var(--hush); }
+.row .ind svg { width: 16px; height: 16px; }
+.row.open { background: var(--card); border-radius: 14px 14px 0 0; }
+.ed { background: var(--card); border-radius: 0 0 14px 14px; padding: 6px 10px 12px; display: grid; gap: 10px; margin-bottom: 6px; }
+.ed .txt { font: inherit; font-size: 16px; color: var(--ink); background: transparent; border: 0; border-bottom: 1px solid var(--line); padding: 6px 2px; width: 100%; }
+.ed .set { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.ed .set + .set { border-top: 1px dashed var(--line); padding-top: 8px; }
+.ed .ib { width: 40px; height: 40px; }
+.ed .ib.on { color: var(--warm); background: color-mix(in srgb, var(--warm) 14%, transparent); }
+.ed input[type=date] { font: inherit; font-size: 15px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+.sw { width: 26px; height: 26px; border-radius: 50%; background: var(--c); border: 3px solid transparent; }
+.sw.on { border-color: var(--ink); }
+.ed .grow { flex: 1; }
+.newstream { font: inherit; font-size: 15px; width: 140px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; }
+.lock { display: grid; place-items: center; height: 70vh; color: var(--hush); }
+.lock svg { width: 72px; height: 72px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbx3B2jZwZ33yQZ4MDTIReCe1GN8KnaCvuVybSaOZ7C_7dfIBHvMWmd-ZBjY6NFuaH6LnQ/exec';
+const KEYNAME = 'streamsKey', CACHENAME = 'streamsData';
+
+/* ---------- icons: the whole interface, drawn by hand ---------- */
+const P = {
+  drop: '<path d="M12 3.5C9 7.6 6.5 10.6 6.5 13.6a5.5 5.5 0 0 0 11 0c0-3-2.5-6-5.5-10.1z"/>',
+  wave: '<path d="M3 10.5c2-2.2 4-2.2 6 0s4 2.2 6 0 4-2.2 6 0M3 15.5c2-2.2 4-2.2 6 0s4 2.2 6 0 4-2.2 6 0"/>',
+  waterfall: '<path d="M3 5h9"/><path d="M8.5 5c-.2 4.4.2 8.6 1.3 12M12 5c.4 1.6.8 3.6.9 5.6M11.6 13c.2 1.4.6 2.8 1.2 4"/><path d="M4 20c2.6-1.4 5.3-1.4 8 0s5.4 1.4 8 0"/>',
+  rock: '<path d="M5.2 16.2c-1.4-3.4.9-7.6 5.1-8.6 3.3-.8 7.2.2 8.9 3.1 1.1 2 .8 4-1.2 5.1-3.3 1.8-11 2.2-12.8.4z"/><path d="M2.5 19.5c3-1 6.5-1 9.5 0s6.5 1 9.5 0"/>',
+  ring: '<circle cx="12" cy="12" r="8.2"/>',
+  ringDone: '<circle cx="12" cy="12" r="8.2"/><path d="M8 12.3l2.6 2.6L16 9.6"/>',
+  moon: '<path d="M18.5 14.6A7.2 7.2 0 0 1 9.4 5.5a7.4 7.4 0 1 0 9.1 9.1z"/>',
+  layers: '<circle cx="5" cy="7" r="1.4"/><circle cx="5" cy="12" r="1.4"/><circle cx="5" cy="17" r="1.4"/><path d="M9.5 7h10M9.5 12h7M9.5 17h4"/>',
+  focus: '<path d="M12 4.5C9.8 7.5 8 9.7 8 12a4 4 0 0 0 8 0c0-2.3-1.8-4.5-4-7.5z"/><path d="M3.5 18.5c2.8 1.6 5.6 2.2 8.5 2.2s5.7-.6 8.5-2.2"/>',
+  refresh: '<path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4.6h-4.6"/>',
+  sprout: '<path d="M12 21v-8.5"/><path d="M12 12.5C12 8.6 9.2 6.5 5 6.5c0 4 2.8 6 7 6zM12 10.6c0-3.2 2.2-5.2 6.4-5.2 0 3.2-2.2 5.2-6.4 5.2z"/>',
+  undo: '<path d="M9 6.5L4.5 11 9 15.5"/><path d="M4.5 11h9.5a5.5 5.5 0 0 1 0 11H11"/>',
+  leaf: '<path d="M5.5 18.5c.2-8 5-12.5 13-13-.3 8-5 12.8-13 13z"/><path d="M5.5 18.5l7.5-7.5"/>',
+  sun: '<circle cx="12" cy="12" r="3.4"/><path d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2M6 6l1.6 1.6M16.4 16.4L18 18M6 18l1.6-1.6M16.4 7.6L18 6"/>',
+  flow: '<path d="M4 9c2.6-2.6 5.4-2.6 8 0s5.4 2.6 8 0"/><path d="M4 15c2.6-2.6 5.4-2.6 8 0s5.4 2.6 8 0"/><path d="M17 5.5l3 3.5-3.5 2"/>',
+  cal: '<rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/>',
+  person: '<circle cx="12" cy="8" r="3.3"/><path d="M5.5 20c.6-3.9 3.2-6 6.5-6s5.9 2.1 6.5 6"/>',
+  personSpark: '<circle cx="10" cy="8.5" r="3.1"/><path d="M4 20c.5-3.6 2.9-5.6 6-5.6 1.6 0 3 .5 4 1.4"/><path d="M18 12.5v5M15.5 15h5"/>',
+  split: '<circle cx="12" cy="12" r="8.2"/><path d="M12 3.8v16.4"/><path d="M12 6.5a5.5 5.5 0 0 1 0 11" stroke-width="3" opacity=".35"/>',
+  spark: '<path d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9-1.9 5.6-1.9-5.6-5.6-1.9 5.6-1.9z"/>',
+  night: '<path d="M16.5 15.6A6.5 6.5 0 0 1 8.4 7.5a6.7 6.7 0 1 0 8.1 8.1z"/><path d="M17.5 4v3M16 5.5h3"/>',
+  hand: '<path d="M4 12h10.5"/><path d="M11 8l4 4-4 4"/><path d="M19.5 5v14"/>',
+  tray: '<path d="M4 13.5l2.4-7h11.2l2.4 7v5H4z"/><path d="M4 13.5h4.5a3.5 3.5 0 0 0 7 0H20"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1-1"/>',
+  lock: '<rect x="5.5" y="10.5" width="13" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  cloud: '<path d="M7 18.5a4 4 0 0 1-.6-8 5.5 5.5 0 0 1 10.6 1.5 3.3 3.3 0 0 1 0 6.5z"/><path d="M4 4l16 16"/>',
+  calm: '<circle cx="12" cy="10" r="3.6"/><path d="M12 3v1.6M5.5 5.5l1.1 1.1M18.5 5.5l-1.1 1.1M3 10h1.6M19.4 10H21"/><path d="M3 15.5c3-1.2 6-1.2 9 0s6 1.2 9 0M5 19c2.4-.9 4.7-.9 7 0s4.6.9 7 0"/>',
+  plus: '<path d="M12 6v12M6 12h12"/>',
+  ok: '<path d="M6 12.5l4 4 8-9"/>',
+};
+const icon = (name, label) => '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + P[name] + '</svg>' + (label ? '<span class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">' + label + '</span>' : '');
+const RHY = ['drop', 'wave', 'waterfall', 'rock'];
+const WHO = [['Full Me', 'person'], ['Claude Light', 'personSpark'], ['Clean Split', 'split'], ['Me Light', 'spark'], ['Off-peak', 'night'], ['Delegate', 'hand']];
+
+/* ---------- stream colours: natural, steady per name ---------- */
+const PAL = ['#6b8f71', '#b5735a', '#5f8fb0', '#b89a52', '#8a6a99', '#4f9a94', '#b77b8e', '#c48a3a', '#6c7a89', '#7f9a4f'];
+const hash = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+// Each stream keeps the colour its name hashes to; if two collide, the later name (A to Z) takes the next free one.
+let CMAP = {};
+function paint(streams) {
+  CMAP = {}; const used = {};
+  streams.slice().sort().forEach(s => { let i = hash(s.toLowerCase()) % PAL.length, n = 0; while (used[i] && n < PAL.length) { i = (i + 1) % PAL.length; n++; } used[i] = 1; CMAP[s] = PAL[i]; });
+}
+const colour = s => (s ? CMAP[s] || PAL[hash(s.toLowerCase()) % PAL.length] : '#8fa2ad');
+
+/* ---------- state ---------- */
+let KEY = '';
+try {
+  const q = new URLSearchParams(location.search).get('k');
+  if (q) { localStorage.setItem(KEYNAME, q); history.replaceState(null, '', location.pathname); }
+  KEY = localStorage.getItem(KEYNAME) || '';
+} catch (e) { KEY = new URLSearchParams(location.search).get('k') || ''; }
+let D = null;            // last data from the server
+let VIEW = 'focus';
+let OPEN = '';           // the task whose actions or editor are open
+let busy = 0, failed = false, lastLoad = 0, undoId = '', undoTimer = 0, adding = false;
+try { D = JSON.parse(localStorage.getItem(CACHENAME) || 'null'); if (D) paint(D.streams || []); } catch (e) {}
+try { if (localStorage.getItem('streamsView') === 'plan') VIEW = 'plan'; } catch (e) {}
+
+const app = document.getElementById('app');
+const h = (tag, attrs, kids) => {
+  const e = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (v === false || v == null) return;
+    if (k === 'html') e.innerHTML = v; else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v); else if (k === 'style' && typeof v === 'object') Object.entries(v).forEach(([sk, sv]) => e.style.setProperty(sk, sv)); else e.setAttribute(k, v === true ? '' : v);
+  });
+  (kids || []).forEach(c => c != null && e.append(c));
+  return e;
+};
+const ib = (name, label, on, extra) => h('button', Object.assign({ class: 'ib' + (extra && extra.on ? ' on' : ''), type: 'button', 'aria-label': label, title: label, html: icon(name), onclick: on }, extra && extra.attrs));
+
+/* ---------- talking to the script ---------- */
+function call(fn, args) {
+  busy++; drawHead();
+  return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn, args: [KEY].concat(args || []) }) })
+    .then(r => r.json())
+    .then(j => { if (!j.ok) throw new Error(j.error); failed = false; return j.result; })
+    .catch(e => { failed = true; throw e; })
+    .finally(() => { busy--; drawHead(); });
+}
+function take(d) {
+  D = d; lastLoad = Date.now(); paint(d.streams || []);
+  try { localStorage.setItem(CACHENAME, JSON.stringify(d)); } catch (e) {}
+  render();
+}
+function load(force) { return call('load', [force === true]).then(take).catch(e => { if (e.message === 'key') { KEY = ''; render(); } }); }
+function act(fn, args, optimistic) {
+  if (optimistic) { optimistic(); render(); }
+  return call(fn, args).then(take).catch(() => load());
+}
+
+/* ---------- the views ---------- */
+let head;
+function drawHead() {
+  if (!head) return;
+  const right = h('div', { class: 'tools' }, [
+    undoId ? ib('undo', 'Undo', () => { const id = undoId; undoId = ''; act('undo', [id]); }) : null,
+    failed ? h('span', { class: 'ib', role: 'img', 'aria-label': 'Offline', title: 'Offline', html: icon('cloud') }) : null,
+    h('button', { class: 'ib' + (busy ? ' spin' : ''), type: 'button', 'aria-label': 'Refresh', title: 'Refresh', html: icon('refresh'), onclick: () => load(true) }),
+    VIEW === 'focus' ? ib('layers', 'Planner', () => go('plan')) : ib('focus', 'Focus', () => go('focus')),
+  ]);
+  head.replaceChildren(h('span', { class: 'ib mark', role: 'img', 'aria-label': 'Streams', html: icon('drop') }), right);
+}
+function go(v) { VIEW = v; OPEN = ''; adding = false; try { localStorage.setItem('streamsView', v); } catch (e) {} render(); window.scrollTo(0, 0); }
+
+function glyph(t) {
+  // How near a waterfall's date is, as strength of colour: far and faint, near and full.
+  let o = 1;
+  if (t.rhythm === 'waterfall' && t.due && D) { const d = (new Date(t.due) - new Date(D.today)) / 864e5; o = d <= 1 ? 1 : d <= 7 ? .8 : .5; }
+  return h('span', { class: 'g', style: { '--c': colour(t.stream), '--o': o }, html: icon(t.ext ? (t.rhythm === 'waterfall' ? 'waterfall' : 'drop') : t.rhythm) });
+}
+const byId = id => (D && D.tasks || []).find(t => t.id === id);
+
+function render() {
+  app.replaceChildren();
+  if (!KEY) { app.append(h('div', { class: 'lock', role: 'img', 'aria-label': 'Locked', html: icon('lock') })); return; }
+  head = h('header'); app.append(head); drawHead();
+  if (!D) { app.append(h('div', { class: 'empty', html: icon('drop') })); return; }
+  if (VIEW === 'focus') renderFocus(); else renderPlan();
+}
+
+function renderFocus() {
+  const ids = D.focus || [];
+  const list = h('ul', { class: 'list' });
+  ids.map(byId).filter(Boolean).forEach(t => {
+    const li = h('li', { class: 'task', style: { '--c': colour(t.stream) }, 'data-id': t.id }, [
+      glyph(t),
+      h('span', { class: 't' + (t.flow ? ' flow' : ''), role: 'button', tabindex: '0', onclick: () => { OPEN = OPEN === t.id ? '' : t.id; render(); }, onkeydown: e => { if (e.key === 'Enter') { OPEN = OPEN === t.id ? '' : t.id; render(); } } }, [t.text]),
+      h('button', { class: 'tick', type: 'button', 'aria-label': 'Done', title: 'Done', html: icon('ring'), onclick: e => finish(t, e.currentTarget.closest('li')) }),
+      OPEN === t.id ? h('div', { class: 'more' }, [ib('moon', 'Not this week', () => act('later', [t.id], () => { D.focus = D.focus.filter(x => x !== t.id); OPEN = ''; })),
+        t.ext ? null : ib('layers', 'Open in planner', () => { go('plan'); OPEN = t.id; render(); })]) : null,
+    ]);
+    list.append(li);
+  });
+  app.append(list);
+  if (!ids.length) app.append(h('div', { class: 'empty', role: 'img', 'aria-label': 'All clear', html: icon('calm') }));
+  app.append(cairn());
+  app.append(foot());
+}
+
+function finish(t, li) {
+  if (li) { li.querySelector('.tick').innerHTML = icon('ringDone'); li.classList.add('going'); }
+  setTimeout(() => {
+    act('done', [t.id], () => {
+      D.focus = D.focus.filter(x => x !== t.id);
+      D.tasks = D.tasks.filter(x => x.id !== t.id);
+      D.stack = (D.stack || []).concat([{ id: t.id, stream: t.stream, fresh: true }]);
+    });
+    if (!t.ext) { undoId = t.id; clearTimeout(undoTimer); undoTimer = setTimeout(() => { undoId = ''; render(); }, 6000); }
+  }, li ? 450 : 0);
+}
+
+/* The week's finished tasks, stacked as stones. Each stone's shape comes from its task, so the cairn is the same every time. */
+function cairn() {
+  const st = (D && D.stack) || [];
+  const box = h('div', { class: 'cairn', role: 'img', 'aria-label': 'Done this week' });
+  if (!st.length) return box;
+  const NS = 'http://www.w3.org/2000/svg';
+  const per = 9, piles = Math.ceil(st.length / per);
+  const W = 120 * piles, H = 26 + Math.min(st.length, per) * 15;
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('width', Math.min(W, 360)); svg.setAttribute('height', Math.min(H, 180) * Math.min(W, 360) / W);
+  const ground = document.createElementNS(NS, 'path');
+  ground.setAttribute('d', 'M4 ' + (H - 5) + ' C ' + W * .3 + ' ' + (H - 9) + ', ' + W * .7 + ' ' + (H - 1) + ', ' + (W - 4) + ' ' + (H - 5));
+  ground.setAttribute('stroke', 'var(--hush)'); ground.setAttribute('fill', 'none'); ground.setAttribute('stroke-width', '1.4'); ground.setAttribute('stroke-linecap', 'round');
+  svg.appendChild(ground);
+  st.forEach((s, i) => {
+    const pile = Math.floor(i / per), k = i % per, r = hash(s.id);
+    const w = 46 - k * 2.6 + (r % 9) - 4, ht = 13 + (r % 5);
+    const cx = pile * 120 + 60 + ((r >> 3) % 9) - 4, cy = H - 12 - k * 14.5;
+    const tilt = ((r >> 5) % 11) - 5;
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('transform', 'translate(' + cx + ' ' + cy + ') rotate(' + tilt + ')');
+    const p = document.createElementNS(NS, 'path');
+    const a = w / 2, b = ht / 2, q = ((r >> 7) % 5) - 2;
+    p.setAttribute('d', 'M' + (-a) + ' ' + (b * .3) + ' C ' + (-a) + ' ' + (-b - q) + ', ' + (a * .4) + ' ' + (-b - 2) + ', ' + a + ' ' + (-b * .1) + ' C ' + (a + 1) + ' ' + (b * .9) + ', ' + (-a * .3) + ' ' + (b + 2 + q) + ', ' + (-a) + ' ' + (b * .3) + 'Z');
+    p.setAttribute('fill', colour(s.stream)); p.setAttribute('fill-opacity', '.82');
+    p.setAttribute('stroke', 'var(--ink)'); p.setAttribute('stroke-opacity', '.18'); p.setAttribute('stroke-width', '1');
+    g.appendChild(p);
+    if (s.fresh) g.setAttribute('class', 'stone');
+    svg.appendChild(g);
+    s.fresh = false;
+  });
+  box.append(svg);
+  return box;
+}
+
+function foot() {
+  const f = h('div', { class: 'foot' });
+  if (!adding) { f.append(ib('sprout', 'Add', () => { adding = true; render(); app.querySelector('.add input').focus(); })); return f; }
+  const inp = h('input', { type: 'text', enterkeyhint: 'done', 'aria-label': 'New task', autocomplete: 'off' });
+  const send = () => {
+    const v = inp.value.trim();
+    if (!v) { adding = false; render(); return; }
+    inp.value = '';
+    act('add', [v, '', '']);
+  };
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') send(); if (e.key === 'Escape') { adding = false; render(); } });
+  f.append(h('div', { class: 'add' }, [inp, ib('ok', 'Add', send), ib('plus', 'Close', () => { adding = false; render(); }, { attrs: { style: 'transform:rotate(45deg)' } })]));
+  return f;
+}
+
+/* ---------- planner: everything, by stream ---------- */
+function renderPlan() {
+  const tasks = D.tasks.slice();
+  const order = ['', ...D.streams];
+  const groups = order.map(s => ({ s, items: tasks.filter(t => t.stream === s) })).filter(g => g.items.length || g.s === '');
+  groups.forEach(g => {
+    // Awake before resting; then a steady order by rhythm, then by date.
+    g.items.sort((a, b) => (a.state === 'resting') - (b.state === 'resting') || (b.score || 0) - (a.score || 0));
+    const sec = h('section', { class: 'stream', style: { '--c': colour(g.s) } });
+    sec.append(h('div', { class: 'sh' }, [
+      g.s ? h('span', { class: 'dot' }) : h('span', { class: 'g', html: icon('tray') }),
+      h('span', { class: 'nm' }, [g.s]),
+      ib('plus', 'Add here', () => { adding = g.s || '-'; render(); const i = app.querySelector('.addin'); if (i) i.focus(); }),
+    ]));
+    if (adding === (g.s || '-')) {
+      const inp = h('input', { class: 'txt addin', type: 'text', enterkeyhint: 'done', 'aria-label': 'New task', autocomplete: 'off', style: 'font:inherit;font-size:16px;width:100%;background:transparent;border:0;border-bottom:1px solid var(--line);padding:8px 4px;color:var(--ink)' });
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter' && inp.value.trim()) { const v = inp.value.trim(); inp.value = ''; act('add', [v, g.s, '']); } if (e.key === 'Escape') { adding = false; render(); } });
+      sec.append(inp);
+    }
+    g.items.forEach(t => {
+      const open = OPEN === t.id;
+      const ind = [];
+      // Only what changes how a task behaves: urgent, under way, resting, from a group, or not Dan's to do now.
+      if (t.priority === 2) ind.push(h('span', { style: { color: 'var(--warm)' }, html: icon('sun') }));
+      if (t.flow) ind.push(h('span', { html: icon('flow') }));
+      if (t.state === 'resting') ind.push(h('span', { html: icon('moon') }));
+      if (t.ext) ind.push(h('span', { html: icon('link') }));
+      const wh = WHO.find(w => w[0] === t.who && (w[0] === 'Off-peak' || w[0] === 'Delegate'));
+      if (wh) ind.push(h('span', { html: icon(wh[1]) }));
+      sec.append(h('div', { class: 'row' + (t.state === 'resting' ? ' rest' : '') + (open ? ' open' : ''), style: { '--c': colour(t.stream) }, role: 'button', tabindex: '0',
+        onclick: () => { OPEN = open ? '' : t.id; render(); }, onkeydown: e => { if (e.key === 'Enter') { OPEN = open ? '' : t.id; render(); } } }, [
+        glyph(t), h('span', { class: 't' }, [t.text]), h('span', { class: 'ind' }, ind),
+      ]));
+      if (open) sec.append(editor(t));
+    });
+    app.append(sec);
+  });
+  app.append(h('div', { style: 'height:40px' }));
+}
+
+function editor(t) {
+  const ed = h('div', { class: 'ed', style: { '--c': colour(t.stream) } });
+  const save = (patch, optimistic) => act('save', [t.id, patch], optimistic);
+  const finishRow = h('div', { class: 'set' }, [
+    ib('ring', 'Done', () => finish(t, null)),
+    ib('moon', 'Not this week', () => act('later', [t.id], () => { t.state = 'resting'; })),
+    t.state === 'resting' && !t.ext ? ib('calm', 'Wake now', () => save({ rest: '' }, () => { t.state = 'open'; })) : null,
+    h('span', { class: 'grow' }),
+    t.ext ? null : ib('leaf', 'Let it go', () => save({ status: 'dropped' }, () => { D.tasks = D.tasks.filter(x => x.id !== t.id); OPEN = ''; })),
+  ]);
+  if (t.ext) { ed.append(finishRow); return ed; }
+  const txt = h('input', { class: 'txt', type: 'text', value: t.text, 'aria-label': 'Task' });
+  txt.addEventListener('change', () => { const v = txt.value.trim(); if (v && v !== t.text) save({ text: v }, () => { t.text = v; }); });
+  ed.append(txt);
+  ed.append(h('div', { class: 'set' }, RHY.map(r => ib(r, r, () => save({ rhythm: t.setRhythm && t.rhythm === r ? '' : r }, () => { t.rhythm = r; t.setRhythm = true; }), { on: t.rhythm === r && t.setRhythm }))
+    .concat([h('span', { class: 'grow' }), ib('flow', 'Under way', () => save({ flow: !t.flow }, () => { t.flow = !t.flow; }), { on: t.flow }),
+      ib('sun', 'Priority', () => { const p = (t.priority + 1) % 3; save({ priority: p }, () => { t.priority = p; }); }, { on: t.priority > 0, attrs: { 'data-p': t.priority, style: t.priority === 2 ? 'color:var(--warm);transform:scale(1.15)' : '' } })])));
+  ed.append(h('div', { class: 'set' }, WHO.map(w => ib(w[1], w[0], () => save({ who: t.who === w[0] ? '' : w[0] }, () => { t.who = t.who === w[0] ? '' : w[0]; }), { on: t.who === w[0] }))));
+  const due = h('input', { type: 'date', value: t.due || '', 'aria-label': 'Due' });
+  due.addEventListener('change', () => save({ due: due.value || '' }, () => { t.due = due.value; }));
+  const swatches = D.streams.map(s => h('button', { class: 'sw' + (s === t.stream ? ' on' : ''), type: 'button', title: s, 'aria-label': s, style: { '--c': colour(s) }, onclick: () => save({ stream: s === t.stream ? '' : s }, () => { t.stream = s === t.stream ? '' : s; }) }));
+  const ns = h('input', { class: 'newstream', type: 'text', 'aria-label': 'New stream', autocomplete: 'off' });
+  ns.addEventListener('keydown', e => { if (e.key === 'Enter' && ns.value.trim()) { const v = ns.value.trim(); save({ stream: v }, () => { t.stream = v; if (D.streams.indexOf(v) < 0) D.streams.push(v); }); } });
+  ed.append(h('div', { class: 'set' }, [h('span', { class: 'ib', html: icon('cal') }), due]));
+  ed.append(h('div', { class: 'set' }, swatches.concat([h('span', { class: 'ib', style: { width: '28px' }, html: icon('plus') }), ns])));
+  ed.append(finishRow);
+  return ed;
+}
+
+/* ---------- start ---------- */
+render();
+if (KEY) load();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && KEY && Date.now() - lastLoad > 120000) load(); });
+</script>
+</body>
+</html>
