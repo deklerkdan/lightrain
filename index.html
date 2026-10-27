@@ -206,6 +206,51 @@ details.fold > .fold-body { display: grid; gap: 14px; margin-top: 12px; }
 .nav button .ico svg, .deck-nav button .ico svg { width: 1.5em; height: 1.5em; }
 .toggle button .ico svg, .tools button .ico svg { width: 1.35em; height: 1.35em; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* where a task came from */
+.src { display: inline-flex; align-items: center; font-size: calc(12px * var(--s)); font-weight: 700; letter-spacing: .02em; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--ground); white-space: nowrap; line-height: 1.6; }
+.src.ext { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* compact rows: tap a row to open its card */
+.rows { display: grid; gap: 6px; }
+.row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 10px; background: var(--paper); border: 1px solid var(--line); border-left: 6px solid var(--wc, var(--quiet)); border-radius: 8px; padding: 7px 10px 7px 8px; }
+.tick { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--muted); background: transparent; cursor: pointer; padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--paper); font-weight: 800; }
+.tick:hover { border-color: var(--done); background: var(--done-soft); }
+.tick.is-done { border-color: var(--done); background: var(--done); cursor: default; }
+.row-main { border: 0; background: none; color: inherit; text-align: left; padding: 2px 0; cursor: pointer; display: grid; gap: 2px; min-width: 0; font: inherit; }
+.row-h { font-weight: 700; font-size: calc(16px * var(--s)); line-height: 1.3; overflow-wrap: anywhere; }
+.row.k-ask .row-h { font-weight: 600; }
+.row-meta { display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center; font-size: calc(13px * var(--s)); color: var(--muted); }
+.row-meta .pj { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--ink); }
+.row-meta .pj i { width: 9px; height: 9px; border-radius: 2px; background: var(--wc, var(--quiet)); display: inline-block; }
+.row-meta .late { color: var(--warm); font-weight: 700; }
+
+/* view controls: project chips, sort, group */
+.controls { display: grid; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 999px; padding: 4px 12px; font-size: calc(13px * var(--s)); font-weight: 600; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chips button i { width: 9px; height: 9px; border-radius: 2px; background: var(--wc, var(--accent)); display: inline-block; }
+.chips button[aria-pressed="true"] { border-color: var(--wc, var(--accent)); background: var(--accent-soft); }
+.chips button .n { color: var(--muted); font-weight: 500; }
+.ctl-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.ctl-row .sortpick { gap: 6px; }
+.dirbtn { border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 6px; padding: 6px 10px; font-size: calc(13px * var(--s)); font-weight: 600; cursor: pointer; }
+details.groupfold > summary { padding: 8px 14px; }
+details.groupfold > summary h2 { font-size: calc(18px * var(--s)); }
+details.groupfold > .fold-body { margin-top: 8px; }
+.subhead { margin: 6px 0 0; font-size: calc(13px * var(--s)); font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+
+/* merge */
+.merged { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px; font-size: calc(14px * var(--s)); }
+.merged .m { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.pick { display: grid; gap: 6px; max-height: 42vh; overflow-y: auto; }
+.pick button { text-align: left; border: 1px solid var(--line); background: var(--ground); color: var(--ink); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; font: inherit; font-size: calc(14px * var(--s)); }
+.pick button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.pick .why { font-size: calc(12px * var(--s)); font-weight: 700; color: var(--accent); }
+.modal input[type=search] { width: 100%; font-size: calc(15px * var(--s)); padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--ground); color: var(--ink); }
+.pair { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; }
+.pair .side { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.notice { background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; font-size: calc(14px * var(--s)); display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
 @media (prefers-reduced-motion: reduce) { .busy .leaf, .busy .trail { animation: none; } }
 </style>
 </head>
@@ -231,6 +276,7 @@ try { D = JSON.parse(localStorage.getItem(PFX + 'Data2') || 'null'); } catch (e)
 const viewFromHash = () => (location.hash === '#add' ? 'add' : location.hash === '#plan' ? 'plan' : 'home');
 let VIEW = viewFromHash();
 let editFor = '', snoozeFor = '';
+const openRows = new Set();   // compact rows opened into full cards
 let addRows = [];
 
 function el(tag, props, kids) {
@@ -298,18 +344,18 @@ let lastLoad = 0;
 function load(force) { lastLoad = Date.now(); call('load', [force === true], take); }
 /** Show the change at once, then save it. Only the newest answer is drawn, so quick taps don't flicker back. */
 let pending = 0;
-function act(fn, args, change, msg) {
+function act(fn, args, change, msg, undo) {
   if (change) { change(); render(); }
-  if (msg) toast(msg);
+  if (msg) toast(msg, undo);
   pending++;
-  call(fn, args, d => { pending--; if (!pending) take(d); }, e => { pending--; fail(e); load(); });
+  call(fn, args, d => { pending--; if (d && d.warning) toast(d.warning); if (!pending) take(d); }, e => { pending--; fail(e); load(); });
 }
 function fail(err) { const n = el('div', { class: 'error', role: 'alert', text: (err && err.message) || String(err) }); app.prepend(n); window.scrollTo(0, 0); }
-function toast(msg) {
+function toast(msg, undo) {
   document.querySelectorAll('.toast').forEach(n => n.remove());
-  const n = el('div', { class: 'toast', role: 'status', text: msg });
+  const n = el('div', { class: 'toast', role: 'status' }, [el('span', { text: msg }), undo ? el('button', { type: 'button', text: 'Undo', onclick: () => { n.remove(); undo(); } }) : '']);
   document.body.append(n);
-  setTimeout(() => n.remove(), 3500);
+  setTimeout(() => n.remove(), undo ? 6000 : 3500);
 }
 const byId = id => ((D && D.tasks) || []).find(t => t.id === id);
 
@@ -414,11 +460,12 @@ function openShare() {
 }
 
 /* ------------------------------------------------ list or one card at a time */
-let deckMode = true;
-try { deckMode = localStorage.getItem(PFX + 'Deck') !== '0'; } catch (e) {}
+// The list (compact rows) is the default; 'Deck2' so devices that remembered the old swipe default start on the list.
+let deckMode = false;
+try { deckMode = localStorage.getItem(PFX + 'Deck2') === '1'; } catch (e) {}
 let deckIdx = 0;
 function viewToggle() {
-  const set = on => { deckMode = on; deckIdx = 0; try { localStorage.setItem(PFX + 'Deck', on ? '1' : '0'); } catch (e) {} render(); };
+  const set = on => { deckMode = on; deckIdx = 0; try { localStorage.setItem(PFX + 'Deck2', on ? '1' : '0'); } catch (e) {} render(); };
   return el('div', { class: 'toggle', role: 'group', 'aria-label': 'How to show your tasks' }, [
     el('button', { type: 'button', 'aria-label': 'List', title: 'List', 'aria-pressed': deckMode ? 'false' : 'true', onclick: () => set(false) }, [L('list', 'List')]),
     el('button', { type: 'button', 'aria-label': 'One at a time, swipe across', title: 'One at a time', 'aria-pressed': deckMode ? 'true' : 'false', onclick: () => set(true) }, [L('swipe', 'One at a time')]),
@@ -458,26 +505,137 @@ function deckView(cards) {
   return el('div', { class: 'deck' }, [el('div', { class: 'deck-nav' }, [prev, count, next]), track, cards.length > 1 && cards.length <= 14 ? dots : '']);
 }
 
-/* ------------------------------------------------ sorting (the same choices on every page) */
-const SORTS = [['default', 'As listed'], ['due', 'Due date'], ['project', 'Project'], ['kind', 'Task / ask'], ['az', 'A to Z'], ['za', 'Z to A']];
-let sortBy = 'default';
-try { sortBy = localStorage.getItem(PFX + 'Sort') || 'default'; } catch (e) {}
+/* ------------------------------------------------ view: sort (either way), show only some projects, group into boxes */
+const remember = (k, v) => { try { localStorage.setItem(PFX + k, typeof v === 'string' ? v : JSON.stringify(v)); } catch (e) {} };
+const recall = (k, dflt) => { try { const v = localStorage.getItem(PFX + k); return v === null ? dflt : v; } catch (e) { return dflt; } };
+
+const SORTS = [['default', 'As listed'], ['due', 'Due date'], ['project', 'Project'], ['source', 'Where it came from'], ['added', 'Date added']];
+// The words on the direction button, first way then the other way.
+const DIRS = { default: ['Top first', 'Bottom first'], due: ['Soonest first', 'Latest first'], project: ['A to Z', 'Z to A'], source: ['A to Z', 'Z to A'], added: ['Newest first', 'Oldest first'] };
+let sortBy = recall('Sort2', 'due');
+if (!DIRS[sortBy]) sortBy = 'due';
+let sortRev = recall('SortRev', '0') === '1';
+/** Sorted by the chosen field, either way round. Tasks with nothing to sort on (no date, no project) always go last. */
 function sorted(list) {
   const idx = new Map(list.map((t, i) => [t, i]));
-  const pj = (D.projects || []);
-  const key = t => sortBy === 'due' ? (t.asap ? '0000' : t.due || '9999')
-    : sortBy === 'project' ? String((pj.indexOf(t.project) + 1) || 999).padStart(3, '0')
-    : sortBy === 'kind' ? (t.kind === 'ask' ? '1' : '0')
-    : sortBy === 'az' || sortBy === 'za' ? String(t.header || '').toLowerCase()
+  const key = t => sortBy === 'due' ? (t.asap ? '0000' : t.due || '')
+    : sortBy === 'project' ? String(t.project || '').toLowerCase()
+    : sortBy === 'source' ? srcName(t).toLowerCase()
+    : sortBy === 'added' ? (t.created || '')
     : String(t.row).padStart(7, '0');
-  const out = list.slice().sort((x, y) => { const a = key(x), b = key(y); return a < b ? -1 : a > b ? 1 : idx.get(x) - idx.get(y); });
-  return sortBy === 'za' ? out.reverse() : out;
+  return list.slice().sort((x, y) => {
+    const a = key(x), b = key(y);
+    if (!a !== !b) return a ? -1 : 1;
+    let c = a < b ? -1 : a > b ? 1 : 0;
+    if (sortBy === 'added') c = -c;   // newest first is the first way round
+    if (sortRev) c = -c;
+    return c || idx.get(x) - idx.get(y);
+  });
 }
 function sortPicker() {
   const sel = el('select', { id: 'sortby', 'aria-label': 'Sort by', title: 'Sort by' }, SORTS.map(o => el('option', { value: o[0], text: o[1] })));
   sel.value = sortBy;
-  sel.addEventListener('change', () => { sortBy = sel.value; try { localStorage.setItem(PFX + 'Sort', sortBy); } catch (e) {} render(); });
-  return el('label', { class: 'small sortpick', for: 'sortby', title: 'Sort by' }, [L('sort', 'Sort by'), sel]);
+  sel.addEventListener('change', () => { sortBy = sel.value; sortRev = false; remember('Sort2', sortBy); remember('SortRev', '0'); render(); });
+  const dir = el('button', { type: 'button', class: 'dirbtn', title: 'Turn the order round', 'aria-label': 'Order: ' + DIRS[sortBy][sortRev ? 1 : 0] + '. Tap to turn it round.',
+    text: (sortRev ? '↑ ' : '↓ ') + DIRS[sortBy][sortRev ? 1 : 0], onclick: () => { sortRev = !sortRev; remember('SortRev', sortRev ? '1' : '0'); render(); } });
+  return el('span', { class: 'small sortpick' }, [el('label', { for: 'sortby', title: 'Sort by', style: 'display:inline-flex;gap:6px;align-items:center' }, [L('sort', 'Sort by'), sel]), dir]);
+}
+
+/** Only the projects Dan picks (none picked = all). Remembered on this device. */
+let pjOnly = [];
+try { pjOnly = JSON.parse(recall('Projects', '[]')) || []; } catch (e) { pjOnly = []; }
+const pjKey = t => t.project || '';
+const shown = list => (pjOnly.length ? list.filter(t => pjOnly.indexOf(pjKey(t)) >= 0) : list);
+function setPj(list) { pjOnly = list; remember('Projects', pjOnly); openRows.clear(); render(); }
+function chips(list) {
+  const n = {};
+  list.forEach(t => { n[pjKey(t)] = (n[pjKey(t)] || 0) + 1; });
+  const names = (D.projects || []).filter(p => n[p]).concat(Object.keys(n).filter(p => p && (D.projects || []).indexOf(p) < 0), n[''] ? [''] : []);
+  if (names.length < 2 && !pjOnly.length) return '';
+  const all = el('button', { type: 'button', 'aria-pressed': pjOnly.length ? 'false' : 'true', onclick: () => setPj([]) }, ['All ', el('span', { class: 'n', text: String(list.length) })]);
+  return el('div', { class: 'chips', role: 'group', 'aria-label': 'Show only some projects' }, [all].concat(names.map(p => el('button', {
+    type: 'button', style: '--wc:' + (colour(p) || 'var(--quiet)'), 'aria-pressed': pjOnly.indexOf(p) >= 0 ? 'true' : 'false',
+    onclick: () => setPj(pjOnly.indexOf(p) >= 0 ? pjOnly.filter(x => x !== p) : pjOnly.concat(p)),
+  }, [el('i'), p || 'No project', el('span', { class: 'n', text: String(n[p]) })]))));
+}
+
+const GROUPS = [['none', 'No boxes'], ['project', 'Project'], ['when', 'When it’s due'], ['status', 'Status'], ['source', 'Where it came from']];
+let groupBy = recall('Group', 'none');
+if (!GROUPS.some(g => g[0] === groupBy)) groupBy = 'none';
+const daysTo = k => Math.round((dateOf(k) - dateOf(today())) / 864e5);
+function groupOf(t) {
+  if (groupBy === 'project') return t.project || 'No project';
+  if (groupBy === 'source') return srcName(t);
+  if (groupBy === 'status') return t.status === 'done' ? 'Done' : t.status === 'backburner' ? 'Back burner' : t.rest ? 'Snoozed' : t.status === 'progress' ? 'Under way' : 'Not started';
+  if (t.asap || (t.due && daysTo(t.due) < 0)) return 'Overdue or ASAP';
+  if (!t.due) return 'No date';
+  const n = daysTo(t.due);
+  return n <= 7 ? 'This week' : n <= 14 ? 'Next week' : 'Later';
+}
+function groupOrder(names) {
+  const fixed = { when: ['Overdue or ASAP', 'This week', 'Next week', 'Later', 'No date'], status: ['Under way', 'Not started', 'Snoozed', 'Done', 'Back burner'],
+    project: (D.projects || []).concat('No project'), source: ['LightRain'] }[groupBy] || [];
+  const rank = g => { const i = fixed.indexOf(g); return i < 0 ? 900 : i; };
+  return names.slice().sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : 1));
+}
+function groupPicker() {
+  const sel = el('select', { id: 'groupby', 'aria-label': 'Group into boxes by', title: 'Group into boxes by' }, GROUPS.map(o => el('option', { value: o[0], text: o[1] })));
+  sel.value = groupBy;
+  sel.addEventListener('change', () => { groupBy = sel.value; remember('Group', groupBy); render(); });
+  return el('label', { class: 'small sortpick', for: 'groupby' }, ['Boxes', sel]);
+}
+/** A list as compact rows: in fold-away boxes on Home, under small headings inside the Planning buckets. */
+function listBlock(list, where) {
+  const draw = l => el('div', { class: 'rows' }, l.map(t => rowOrCard(t, where)));
+  if (groupBy === 'none' || !list.length) return draw(list);
+  const groups = new Map();
+  list.forEach(t => { const g = groupOf(t); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(t); });
+  const order = groupOrder([...groups.keys()]);
+  if (where === 'plan') return el('div', { class: 'stack' }, order.flatMap(g => [el('h3', { class: 'subhead', text: g + ' · ' + groups.get(g).length }), draw(groups.get(g))]));
+  return el('div', { class: 'stack' }, order.map(g => foldSection('g:' + groupBy + ':' + g, g, groups.get(g).length, [draw(groups.get(g))], '', 'groupfold', true)));
+}
+function controls(all, withGroup) {
+  return el('div', { class: 'controls' }, [chips(all), el('div', { class: 'ctl-row' }, [sortPicker(), withGroup ? groupPicker() : '', VIEW === 'home' ? viewToggle() : ''])]);
+}
+
+/* ------------------------------------------------ where a task came from */
+/** LightRain for Dan's own rows; "EcoFest app" / "CCAN app" for asks sent from a group's briefing app. */
+function srcName(t) { return t.ext || String(t.id || '').charAt(0) === 'x' ? (t.source || t.project || 'Group') + ' app' : 'LightRain'; }
+function srcPill(t) {
+  const ext = srcName(t) !== 'LightRain';
+  return el('span', { class: 'src' + (ext ? ' ext' : ''), title: ext ? 'Sent from the ' + srcName(t) : 'Your own list (LightRain)' }, [srcName(t)]);
+}
+
+/* ------------------------------------------------ doubles: the same task from two places */
+const STOP = new Set('the and for with from about into this that next our your dan team please get set make need needs will can are was its all any new'.split(' '));
+function words(t) {
+  const out = new Set();
+  // "For Claude: read the handoff…" tails are the same on many rows, so they don't count.
+  String((t.header || '') + ' ' + String(t.text || '').replace(/for claude:[\s\S]*$/i, '')).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/)
+    .forEach(w => { if (w.length > 2 && !STOP.has(w)) out.add(w.length > 4 ? w.replace(/(ing|ed|es|s)$/, '') : w); });
+  return out;
+}
+/** How alike two tasks are: shared words over the shorter one's words (0 to 1), and how many are shared. */
+function likeness(a, b) {
+  const A = words(a), B = words(b);
+  if (!A.size || !B.size) return { s: 0, n: 0 };
+  let n = 0;
+  A.forEach(w => { if (B.has(w)) n++; });
+  return { s: n / Math.min(A.size, B.size), n };
+}
+/** Open tasks that look like the same thing: from different places, or the same project. Pairs Dan said differ are left out. */
+function doubles() {
+  const open = D.tasks.filter(isOpen);
+  const no = new Set(D.notSame || []);
+  const out = [];
+  for (let i = 0; i < open.length; i++) for (let j = i + 1; j < open.length; j++) {
+    const a = open[i], b = open[j];
+    if (srcName(a) === srcName(b) && a.project !== b.project) continue;
+    if (no.has([a.id, b.id].sort().join('|'))) continue;
+    const l = likeness(a, b);
+    if ((l.n >= 2 && l.s >= 0.6) || (a.header.toLowerCase() === b.header.toLowerCase())) out.push({ a, b, s: l.s });
+  }
+  return out.sort((x, y) => y.s - x.s).slice(0, 12);
 }
 
 /* ------------------------------------------------ where each task sits */
@@ -497,7 +655,7 @@ function card(t, where) {
   const kindWord = kind === 'ask' ? 'Ask: optional, a nice-to-have' : 'Task';
   const kids = [el('div', { class: 'flag', title: kindWord, 'aria-label': kindWord }, [labelMode === 'icons' ? ico('person') : (kind === 'ask' ? 'Ask' : 'Task')])];
   if (where === 'plan' && t.feature && isOpen(t)) kids.push(el('span', { class: 'tag', text: 'In Coming up' }));
-  kids.push(el('div', { class: 'wsname' }, [el('i'), t.project || 'No project yet', t.ext ? el('span', { class: 'from', text: ' · from the ' + (t.from || t.project) + ' app' }) : '']));
+  kids.push(el('div', { class: 'wsname' }, [el('i'), t.project || 'No project yet', srcPill(t)]));
   if (editFor === t.id && !t.ext) { kids.push(editForm(t)); return wrapCard(t, kind, kids); }
   kids.push(el('div', { class: 'ask-h' }, [t.header, kind === 'ask' ? el('span', { class: 'optional', text: '  nice to have' }) : '']));
   if (t.text) kids.push(el('div', { class: 'ask-text', text: t.text }));
@@ -510,11 +668,20 @@ function card(t, where) {
   if (where === 'plan' && t.rest && isOpen(t) && t.list !== 'off') meta.push(el('span', { class: 'small', text: 'then back to ' + LIST_NAMES[t.list] }));
   if (meta.length) kids.push(el('div', { class: 'ask-meta' }, meta));
   if (t.link) kids.push(el('div', { class: 'ask-link' }, [el('a', { href: t.link, target: '_blank', rel: 'noopener', 'aria-label': 'Open ' + (t.linkText || 'the link'), title: t.linkText || t.link }, t.linkText ? t.linkText : [L('link', 'Link')])]));
+  if (t.merged && t.merged.length) {
+    kids.push(el('div', { class: 'merged' }, [el('span', { class: 'small', text: 'Merged into this one. Done here finishes ' + (t.merged.length > 1 ? 'them' : 'it') + ' too:' })].concat(t.merged.map(m => el('div', { class: 'm' }, [
+      srcPill(m), el('b', { text: m.header }), m.due ? el('span', { class: 'small', text: 'due ' + fmt(m.due) }) : '',
+      m.link ? el('a', { href: m.link, target: '_blank', rel: 'noopener', class: 'small', text: m.linkText || 'Link' }) : '',
+      isOpen(t) ? el('button', { class: 'switch', type: 'button', text: 'Split off', title: 'Show it on its own again', onclick: () => act('unmerge', [m.id], () => { t.merged = t.merged.filter(x => x.id !== m.id); }, 'Split off. It shows on its own again.') }) : '',
+    ])))));
+  }
+  const fold = openRows.has(t.id) ? el('button', { class: 'switch', type: 'button', text: 'Fold up', title: 'Back to a single line', onclick: () => { openRows.delete(t.id); editFor = snoozeFor = ''; render(); } }) : '';
 
   if (!isOpen(t)) {
     kids.push(el('div', { class: 'answered' }, [
       t.status === 'done' ? el('span', { class: 'chip done', text: 'Done' + (t.doneOn ? ' ' + fmt(t.doneOn) : '') }) : el('span', { class: 'chip cant', text: 'Back burner' }),
-      t.ext ? el('span', { class: 'small', text: 'Answered in the ' + (t.project || 'group') + ' app' }) : el('button', { class: 'switch', type: 'button', text: 'Bring it back', onclick: () => act('save', [t.id, { status: 'open' }], () => { t.status = 'open'; t.doneOn = ''; }, 'Back in play.') }),
+      t.ext ? el('span', { class: 'small', text: 'Answered in the ' + srcName(t) }) : el('button', { class: 'switch', type: 'button', text: 'Bring it back', onclick: () => act('save', [t.id, { status: 'open' }], () => { t.status = 'open'; t.doneOn = ''; }, 'Back in play.') }),
+      fold,
     ]));
     return wrapCard(t, kind, kids);
   }
@@ -532,23 +699,122 @@ function card(t, where) {
     setTimeout(() => when.focus(), 0);
   } else {
     kids.push(el('div', { class: 'resp' }, [
-      el('button', { type: 'button', class: 'pri', text: 'Done', onclick: () => act('done', [t.id], () => { t.status = 'done'; t.doneOn = today(); t.rest = ''; }, t.ext ? 'Done. Answered in the ' + t.project + ' app too.' : 'Done. Nice one.') }),
+      el('button', { type: 'button', class: 'pri', text: 'Done', onclick: () => finish(t) }),
       t.rest ? el('button', { type: 'button', text: 'Wake it now', onclick: () => act('save', [t.id, { rest: '' }], () => { t.rest = ''; }, 'Awake again.') })
         : el('button', { type: 'button', text: 'Snooze until…', onclick: () => { snoozeFor = t.id; editFor = ''; render(); } }),
+      where === 'home' && bucket(t) === 'on' ? el('button', { type: 'button', text: 'Off my list', title: 'Not now: it waits in Planning > Not on the list',
+        onclick: () => act('save', [t.id, { list: 'off' }], () => { t.list = 'off'; t.listSet = true; openRows.delete(t.id); }, 'Off your list. It waits in Planning.', () => act('save', [t.id, { list: 'on' }], () => { t.list = 'on'; }, 'Back on your list.')) }) : '',
       t.ext ? '' : el('button', { type: 'button', text: 'Edit', onclick: () => { editFor = t.id; snoozeFor = ''; render(); } }),
     ]));
   }
   if (where === 'plan') kids.push(moves(t));
-  if (!t.ext) {
-    kids.push(el('div', { class: 'extras' }, [
-      el('button', { class: 'switch', type: 'button', text: 'Back burner', title: 'Not this month: counts as done for now, and you can bring it back', onclick: () => act('save', [t.id, { status: 'backburner' }], () => { t.status = 'backburner'; }, 'On the back burner. Bring it back from Planning > Done.') }),
-      el('button', { class: 'switch warn', type: 'button', text: 'Delete', onclick: () => {
-        if (!window.confirm('Delete “' + t.header + '”? It goes from every list.')) return;
-        act('save', [t.id, { status: 'deleted' }], () => { D.tasks = D.tasks.filter(x => x.id !== t.id); }, 'Deleted.');
-      } }),
-    ]));
-  }
+  kids.push(el('div', { class: 'extras' }, [
+    el('button', { class: 'switch', type: 'button', text: 'Merge…', title: 'The same task from two places? Fold one into the other', onclick: () => openMerge(t) }),
+    t.ext ? '' : el('button', { class: 'switch', type: 'button', text: 'Back burner', title: 'Not this month: counts as done for now, and you can bring it back', onclick: () => act('save', [t.id, { status: 'backburner' }], () => { t.status = 'backburner'; }, 'On the back burner. Bring it back from Planning > Done.') }),
+    t.ext ? '' : el('button', { class: 'switch warn', type: 'button', text: 'Delete', onclick: () => {
+      if (!window.confirm('Delete “' + t.header + '”? It goes from every list.')) return;
+      act('save', [t.id, { status: 'deleted' }], () => { D.tasks = D.tasks.filter(x => x.id !== t.id); }, 'Deleted.');
+    } }),
+    fold,
+  ]));
   return wrapCard(t, kind, kids);
+}
+
+/** Done, from a row's tick or a card's button. Own tasks can be undone; a group ask is answered in its app. */
+function finish(t) {
+  const n = (t.merged || []).length;
+  const msg = (t.ext ? 'Done. Answered in the ' + srcName(t) + ' too.' : 'Done.') + (n ? ' The merged one' + (n > 1 ? 's are' : ' is') + ' finished too.' : '');
+  const undo = !t.ext && !n ? () => act('save', [t.id, { status: 'open' }], () => { t.status = 'open'; t.doneOn = ''; }, 'Back on your list.') : null;
+  openRows.delete(t.id);
+  act('done', [t.id], () => { t.status = 'done'; t.doneOn = today(); t.rest = ''; }, msg, undo);
+}
+
+/** One line per task: tick, header, and project · where it came from · due. Tap the line to open the full card. */
+function row(t, where) {
+  const open = isOpen(t);
+  const meta = [el('span', { class: 'pj' }, [el('i'), t.project || 'No project']), srcPill(t)];
+  if (t.asap && open) meta.push(el('span', { class: 'late', text: 'ASAP' }));
+  else if (t.due && open) meta.push(t.due < today() ? el('span', { class: 'late', text: 'Overdue ' + fmt(t.due) }) : el('span', { text: 'Due ' + fmt(t.due) }));
+  if (t.status === 'progress') meta.push(el('span', { text: 'Under way' }));
+  if (t.rest && open) meta.push(el('span', { text: 'Snoozed until ' + fmt(t.rest) }));
+  if (t.kind === 'ask') meta.push(el('span', { class: 'optional', text: 'nice to have' }));
+  if (t.merged && t.merged.length) meta.push(el('span', { text: '+' + t.merged.length + ' merged' }));
+  if (where === 'plan' && t.feature && open) meta.push(el('span', { text: '★ Coming up' }));
+  if (!open) meta.push(el('span', { text: t.status === 'done' ? 'Done' + (t.doneOn ? ' ' + fmt(t.doneOn) : '') : 'Back burner' }));
+  const tick = open ? el('button', { class: 'tick', type: 'button', 'aria-label': 'Done: ' + t.header, title: 'Done', onclick: () => finish(t) })
+    : el('span', { class: 'tick is-done', 'aria-hidden': 'true', text: '✓' });
+  const main = el('button', { class: 'row-main', type: 'button', 'aria-expanded': 'false', title: 'Open', onclick: () => { openRows.add(t.id); render(); } },
+    [el('span', { class: 'row-h', text: t.header }), el('span', { class: 'row-meta' }, meta)]);
+  const c = colour(t.project);
+  return el('article', { class: 'row k-' + (t.kind === 'ask' ? 'ask' : 'task'), style: c ? '--wc:' + c : '', 'aria-label': t.header }, [tick, main]);
+}
+const rowOrCard = (t, where) => (openRows.has(t.id) || editFor === t.id || snoozeFor === t.id ? card(t, where) : row(t, where));
+
+/** Merge: pick the other task (likely matches first), then which one to keep. Done on the kept one finishes both. */
+function openMerge(t) {
+  if (document.getElementById('merge-modal')) return;
+  const others = D.tasks.filter(x => x.id !== t.id && isOpen(x)).map(x => Object.assign({ x }, likeness(t, x)))
+    .sort((a, b) => b.s - a.s || (a.x.header < b.x.header ? -1 : 1));
+  let pick = null, keepThis = true;
+  const prevFocus = document.activeElement;
+  const close = () => { back.remove(); document.removeEventListener('keydown', onKey); if (prevFocus && prevFocus.focus) prevFocus.focus(); };
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const q = el('input', { type: 'search', placeholder: 'Find a task…', 'aria-label': 'Find the other task' });
+  const listBox = el('div', { class: 'pick', role: 'group', 'aria-label': 'The other task' });
+  const keepBox = el('div', { class: 'stack' });
+  const go = el('button', { class: 'btn', type: 'button', text: 'Merge', disabled: true, onclick: () => {
+    if (!pick) return;
+    const keep = keepThis ? t : pick, other = keepThis ? pick : t;
+    close();
+    act('merge', [keep.id, other.id], () => {
+      keep.merged = (keep.merged || []).concat({ id: other.id, header: other.header, source: other.source, project: other.project, due: other.due, link: other.link, linkText: other.linkText }, other.merged || []);
+      D.tasks = D.tasks.filter(x => x.id !== other.id);
+      openRows.delete(other.id);
+    }, 'Merged. Done on “' + keep.header + '” finishes both.');
+  } });
+  function drawList() {
+    const s = q.value.trim().toLowerCase();
+    const rows = others.filter(o => !s || (o.x.header + ' ' + o.x.text + ' ' + o.x.project).toLowerCase().indexOf(s) >= 0).slice(0, 40);
+    listBox.replaceChildren(...rows.map(o => el('button', { type: 'button', 'aria-pressed': pick === o.x ? 'true' : 'false', onclick: () => { pick = o.x; drawList(); drawKeep(); } }, [
+      o.n && o.s >= 0.34 ? el('span', { class: 'why', text: 'Looks similar' }) : '',
+      el('b', { text: o.x.header }),
+      el('span', { class: 'row-meta' }, [el('span', { class: 'pj', style: '--wc:' + (colour(o.x.project) || 'var(--quiet)') }, [el('i'), o.x.project || 'No project']), srcPill(o.x)]),
+    ])));
+    if (!rows.length) listBox.replaceChildren(none('No open task matches that.'));
+  }
+  function drawKeep() {
+    go.disabled = !pick;
+    if (!pick) { keepBox.replaceChildren(); return; }
+    const opt = (on, x) => el('button', { type: 'button', 'aria-pressed': on ? 'true' : 'false', onclick: () => { keepThis = x === t; drawKeep(); } }, ['Keep “' + x.header + '” (' + srcName(x) + ')']);
+    const other = keepThis ? pick : t;
+    keepBox.replaceChildren(
+      el('span', { class: 'lab small', text: 'Which one stays on your lists?' }),
+      el('div', { class: 'pick' }, [opt(keepThis, t), opt(!keepThis, pick)]),
+      el('p', { class: 'small', style: 'margin:0', text: '“' + other.header + '” folds into it. Done on the kept one finishes both' + (other.ext || (keepThis ? t : pick).ext ? ', and answers Done in the group app.' : '.') + ' You can split it off again from the card.' }));
+  }
+  q.addEventListener('input', drawList);
+  const box = el('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'merge-h' }, [
+    el('h2', { id: 'merge-h', text: 'Merge “' + t.header + '” with…' }), q, listBox, keepBox,
+    el('div', { class: 'inline' }, [go, el('button', { class: 'switch', type: 'button', text: 'Cancel', onclick: close })]),
+  ]);
+  const back = el('div', { class: 'modal-back', id: 'merge-modal', onclick: e => { if (e.target === back) close(); } }, [box]);
+  drawList(); drawKeep();
+  document.body.append(back);
+  document.addEventListener('keydown', onKey);
+  q.focus();
+}
+/** Planning: pairs that look like the same task, to merge or mark as different. */
+function doublePair(p) {
+  const side = x => el('div', { class: 'side' }, [srcPill(x), el('b', { text: x.header }), el('span', { class: 'small', text: x.project || 'No project' }), x.due ? el('span', { class: 'small', text: 'due ' + fmt(x.due) }) : '']);
+  const merge = (keep, other) => act('merge', [keep.id, other.id], () => {
+    keep.merged = (keep.merged || []).concat({ id: other.id, header: other.header, source: other.source, project: other.project, due: other.due });
+    D.tasks = D.tasks.filter(x => x.id !== other.id);
+  }, 'Merged into “' + keep.header + '”.');
+  return el('div', { class: 'pair' }, [side(p.a), side(p.b), el('div', { class: 'moves' }, [
+    el('button', { type: 'button', text: 'Merge, keep the first', onclick: () => merge(p.a, p.b) }),
+    el('button', { type: 'button', text: 'Merge, keep the second', onclick: () => merge(p.b, p.a) }),
+    el('button', { type: 'button', text: 'Not the same', onclick: () => act('notSame', [p.a.id, p.b.id], () => { D.notSame = (D.notSame || []).concat([p.a.id, p.b.id].sort().join('|')); }, 'Got it. They stay apart.') }),
+  ])]);
 }
 function wrapCard(t, kind, kids) {
   const c = colour(t.project);
@@ -625,7 +891,7 @@ function navBar() {
   return el('nav', { class: 'nav', 'aria-label': 'Pages' }, [b('home', 'home', 'Home'), b('add', 'plus', 'Add tasks'), b('plan', 'plan', 'Planning')]);
 }
 function go(v) {
-  VIEW = v; editFor = ''; snoozeFor = ''; deckIdx = 0;
+  VIEW = v; editFor = ''; snoozeFor = ''; deckIdx = 0; openRows.clear();
   try { history.replaceState(null, '', location.pathname + (v === 'home' ? '' : '#' + v)); } catch (e) {}
   render(); window.scrollTo(0, 0);
 }
@@ -652,8 +918,8 @@ function helpNote(text) {
 }
 let folds = { on: true, off: false, done: false, watch: false, backlog: false, homeDone: false };
 try { folds = Object.assign(folds, JSON.parse(localStorage.getItem(PFX + 'Folds') || '{}')); } catch (e) {}
-function foldSection(key, title, count, kids, help) {
-  const det = el('details', { class: 'fold', open: folds[key] }, [
+function foldSection(key, title, count, kids, help, cls, openFirst) {
+  const det = el('details', { class: 'fold' + (cls ? ' ' + cls : ''), open: folds[key] === undefined ? !!openFirst : folds[key] }, [
     el('summary', {}, [el('h2', { text: title }), el('span', { class: 'cnt', text: String(count) })]),
     el('div', { class: 'fold-body' }, [help ? helpNote(help) : ''].concat(kids)),
   ]);
@@ -668,20 +934,26 @@ function renderHome() {
     el('div', { class: 'eyebrow', text: 'LightRain · ' + fmtLong(today()) }),
     el('h1', {}, ['Hello ' + (D.name || 'Dan') + '. ', el('em', { text: 'Here’s your list.' })]),
   ])];
-  const open = sorted(D.tasks.filter(t => isOpen(t) && bucket(t) === 'on'));
-  const part = [el('div', { class: 'part-head' }, [el('h2', { text: 'On your list' })])];
-  if (open.length) {
-    part.push(el('div', { class: 'view-row' }, [sortPicker(), viewToggle()]));
-    part.push(el('div', { class: 'legend' }, [
-      el('span', {}, [ico('person'), 'Task']),
-      el('span', {}, [el('span', { class: 'lt' }, [ico('person')]), 'Ask (nice to have)']),
-    ]));
-    const cards = open.map(t => card(t, 'home'));
-    part.push(deckMode ? deckView(cards) : el('div', { class: 'stack', style: 'gap:14px' }, cards));
+  const onList = D.tasks.filter(t => isOpen(t) && bucket(t) === 'on');
+  const open = sorted(shown(onList));
+  const part = [el('div', { class: 'part-head' }, [el('h2', { text: 'On your list' }), el('span', { class: 'small', text: open.length + (open.length === 1 ? ' task' : ' tasks') })])];
+  const dbl = doubles();
+  if (dbl.length) part.push(el('div', { class: 'notice', role: 'note' }, [el('span', { text: dbl.length + (dbl.length === 1 ? ' task looks like it came in twice.' : ' tasks look like they came in twice.') }),
+    el('button', { class: 'switch', type: 'button', text: 'Check them in Planning', onclick: () => { folds.doubles = true; go('plan'); } })]));
+  if (onList.length) {
+    part.push(controls(onList, !deckMode));
+    if (!open.length) part.push(none('Nothing on your list for those projects.'));
+    else if (deckMode) {
+      part.push(el('div', { class: 'legend' }, [
+        el('span', {}, [ico('person'), 'Task']),
+        el('span', {}, [el('span', { class: 'lt' }, [ico('person')]), 'Ask (nice to have)']),
+      ]));
+      part.push(deckView(open.map(t => card(t, 'home'))));
+    } else part.push(listBlock(open, 'home'));
   } else part.push(none('Nothing on your list. Put some on from Planning, or add new ones.'));
   kids.push(el('section', { class: 'part' }, part));
-  const doneWeek = sorted(D.tasks.filter(t => doneSince(t, 7)));
-  if (doneWeek.length) kids.push(foldSection('homeDone', 'Done this week', doneWeek.length, doneWeek.map(t => card(t, 'home'))));
+  const doneWeek = sorted(shown(D.tasks.filter(t => doneSince(t, 7))));
+  if (doneWeek.length) kids.push(foldSection('homeDone', 'Done this week', doneWeek.length, [el('div', { class: 'rows' }, doneWeek.map(t => rowOrCard(t, 'home')))]));
 
   const coming = D.tasks.filter(t => t.feature && isOpen(t) && (t.due || t.asap)).sort((a, b) => ((a.asap ? '0' : a.due) < (b.asap ? '0' : b.due) ? -1 : 1));
   if (coming.length) {
@@ -731,11 +1003,13 @@ function renderPlan() {
   ];
   const kids = [navBar(), el('header', {}, [el('div', { class: 'eyebrow', text: 'LightRain · Planning' }), el('h1', {}, ['Where things ', el('em', { text: 'stand' })])]),
     el('div', { class: 'stats' }, stats.map(([l, n]) => el('div', { class: 'stat' }, [el('b', { text: String(n) }), el('span', { text: l })]))),
-    sortPicker()];
-  const inB = b => sorted(T.filter(t => bucket(t) === b));
+    controls(T, true)];
+  const dbl = doubles();
+  if (dbl.length) kids.push(foldSection('doubles', 'Possible doubles', dbl.length, dbl.map(doublePair), 'Tasks that look like the same thing, often one from a group app and one on your own list. Merge them and Done on one finishes both (and answers Done in the group app). Not the same? Say so and they won’t be suggested again.', '', true));
+  const inB = b => sorted(shown(T.filter(t => bucket(t) === b)));
   const doneList = inB('done');
   if (sortBy === 'default') doneList.sort((a, b) => (b.doneOn || '') < (a.doneOn || '') ? -1 : (b.doneOn || '') > (a.doneOn || '') ? 1 : 0);
-  const sec = (key, title, list, empty, help) => foldSection(key, title, list.length, list.length ? list.map(t => card(t, 'plan')) : [none(empty)], help);
+  const sec = (key, title, list, empty, help) => foldSection(key, title, list.length, [list.length ? listBlock(list, 'plan') : none(empty)], help);
   kids.push(sec('on', 'On the list', inB('on'), 'Nothing on the list.', 'What shows on your Home page. Tasks you haven’t placed yourself land here when they are under way, urgent, new this week or due within two weeks.'));
   kids.push(sec('off', 'Not on the list', inB('off'), 'Nothing waiting here.', 'Open tasks you are not working on now, plus anything snoozed (it goes back where it was on its date).'));
   kids.push(sec('done', 'Done', doneList, 'Nothing finished yet.', 'Finished tasks, newest first, and anything on the back burner. Bring any of them back if you need to.'));
