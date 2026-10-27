@@ -938,7 +938,7 @@ function renderHome() {
   const open = sorted(shown(onList));
   const part = [el('div', { class: 'part-head' }, [el('h2', { text: 'On your list' }), el('span', { class: 'small', text: open.length + (open.length === 1 ? ' task' : ' tasks') })])];
   const dbl = doubles();
-  if (dbl.length) part.push(el('div', { class: 'notice', role: 'note' }, [el('span', { text: dbl.length + (dbl.length === 1 ? ' task looks like it came in twice.' : ' tasks look like they came in twice.') }),
+  if (dbl.length) part.push(el('div', { class: 'notice', role: 'note' }, [el('span', { text: dbl.length === 1 ? 'One task may be on here twice.' : dbl.length + ' tasks may be on here twice (the same job from two places).' }),
     el('button', { class: 'switch', type: 'button', text: 'Check them in Planning', onclick: () => { folds.doubles = true; go('plan'); } })]));
   if (onList.length) {
     part.push(controls(onList, !deckMode));
